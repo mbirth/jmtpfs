@@ -1,0 +1,4 @@
+*.o
+*.Po
+src/jmtpfs
+autom4te.cache/
