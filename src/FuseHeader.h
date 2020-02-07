@@ -22,7 +22,7 @@
 #ifndef FUSEHEADER_H_
 #define FUSEHEADER_H_
 
-#define FUSE_USE_VERSION 26
+#define FUSE_USE_VERSION 30
 #include <fuse.h>
 #include <fuse_opt.h>
 

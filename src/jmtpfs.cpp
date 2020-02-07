@@ -18,7 +18,7 @@
  * Boston, MA 02111-1301, USA.
  * licensing@fsf.org
  */
-#define FUSE_USE_VERSION 26
+#define FUSE_USE_VERSION 30
 #include "ConnectedMtpDevices.h"
 #include "mtpFilesystemErrors.h"
 #include "Mutex.h"
@@ -73,7 +73,7 @@ RecursiveMutex	globalLock;
 
 
 
-extern "C" int jmtpfs_getattr(const char* pathStr, struct stat* info)
+extern "C" int jmtpfs_getattr(const char* pathStr, struct stat* info, struct fuse_file_info *fi)
 {
 	FUSE_ERROR_BLOCK_START
 
@@ -88,16 +88,17 @@ extern "C" int jmtpfs_getattr(const char* pathStr, struct stat* info)
 }
 
 extern "C" int jmtpfs_readdir(const char* pathStr, void* buf, fuse_fill_dir_t filler,
-		off_t offset, struct fuse_file_info *fi)
+		off_t offset, struct fuse_file_info *fi, enum fuse_readdir_flags flags)
 {
 	FUSE_ERROR_BLOCK_START
 
+		enum fuse_fill_dir_flags fdflags;
 		FilesystemPath path(pathStr);
 		std::unique_ptr<MtpNode> n = context->getNode(path);
 		std::vector<std::string> contents = n->readdir();
 		for(std::vector<std::string>::iterator i = contents.begin(); i != contents.end(); i++)
 		{
-			if (filler(buf,i->c_str(),0, 0))
+			if (filler(buf,i->c_str(), 0, 0, fdflags))
 				return 0;
 		}
 		return 0;
@@ -185,7 +186,7 @@ extern "C" int jmtpfs_write(const char *pathStr, const char *data, size_t size, 
 	FUSE_ERROR_BLOCK_END
 }
 
-extern "C" int jmtpfs_truncate(const char *pathStr, off_t length)
+extern "C" int jmtpfs_truncate(const char *pathStr, off_t length, struct fuse_file_info *fi)
 {
 	FUSE_ERROR_BLOCK_START
 
@@ -219,7 +220,7 @@ extern "C" int jmtpfs_flush(const char *pathStr, struct fuse_file_info *)
 }
 
 
-extern "C" int jmtpfs_rename(const char *pathStr, const char *newPathStr)
+extern "C" int jmtpfs_rename(const char *pathStr, const char *newPathStr, unsigned int flags)
 {
 	FUSE_ERROR_BLOCK_START
 
@@ -246,7 +247,7 @@ extern "C" int jmtpfs_statfs(const char *pathStr, struct statvfs *stat)
 	FUSE_ERROR_BLOCK_END
 }
 
-extern "C" int jmtpfs_chmod(const char* pathStr, mode_t mode)
+extern "C" int jmtpfs_chmod(const char* pathStr, mode_t mode, struct fuse_file_info *fi)
 {
 	FUSE_ERROR_BLOCK_START
 
@@ -259,7 +260,7 @@ extern "C" int jmtpfs_chmod(const char* pathStr, mode_t mode)
 	FUSE_ERROR_BLOCK_END
 }
 
-extern "C" int jmtpfs_utime(const char* pathStr, struct utimbuf*)
+extern "C" int jmtpfs_utimens(const char* pathStr, const struct timespec tv[2], struct fuse_file_info *fi)
 {
 	FUSE_ERROR_BLOCK_START
 
@@ -321,7 +322,7 @@ int main(int argc, char *argv[])
 	jmtpfs_oper.rename = jmtpfs_rename;
 	jmtpfs_oper.statfs = jmtpfs_statfs;
 	jmtpfs_oper.chmod = jmtpfs_chmod;
-	jmtpfs_oper.utime = jmtpfs_utime;
+	jmtpfs_oper.utimens = jmtpfs_utimens;
 
 	jmtpfs_options options;
 
