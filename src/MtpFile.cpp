@@ -131,13 +131,13 @@ void MtpFile::Rename(MtpNode& newParent, const std::string& newName)
 	/* This true in place rename seems to confuse apps on the android device. The Gallery app
 	 * for example, won't notice image files that have been renamed. So to prevent this strangeness
 	 * real rename is disabled, and instead we make a copy of the file and delete the original
+	*/
 	if ((newParent.FolderId() == md.self.parentId) && (newParent.StorageId() == md.self.storageId))
 	{
 		// we can do a real rename
 		m_device.RenameFile(md.self.id, newName);
 	}
 	else
-	*/
 	{
 		//we have to do a copy and delete
 		MtpLocalFileCopy* localFile = m_cache.openFile(m_device, md.self.id);
